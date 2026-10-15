@@ -22,3 +22,7 @@ svg.arrow-icon{width:16px;height:16px;display:block;flex:0 0 auto;fill:none;stro
 @media(max-width:700px){.paging{gap:7px}.paging button{width:25px;height:25px}.promo>b{gap:4px;padding:4px 6px}.promo>b .arrow-icon{width:11px;height:11px}.banner-copy button .arrow-icon{width:13px;height:13px}.profile-invite>button .arrow-icon{width:12px;height:12px}.profile-invite>button{gap:6px}}
 @media(max-height:680px) and (max-width:700px){.paging button{height:23px;width:23px}.paging button .arrow-icon{width:12px;height:12px}.promo>b .arrow-icon{width:10px;height:10px}}
 @media(prefers-reduced-motion:reduce){.paging button{transition:none}}
+/* Quiet entry chevrons for campaign modules and collection rows. */
+.promo>b{right:14px;bottom:13px;background:transparent;border:0;padding:0;width:18px;height:18px;box-shadow:none;color:#1b594b}.module-chevron{width:17px;height:17px;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0}.catalog-item .pick-arrow{width:25px;min-width:25px;align-items:center;justify-content:center;color:#8cbaa0}.catalog-item .pick-arrow .module-chevron{width:16px;height:16px}.promo:hover>b{color:#0b3b30}.catalog-item:hover .pick-arrow{color:#b9e6cf}
+@media(max-width:700px){.promo>b{right:12px;bottom:11px;width:15px;height:15px;padding:0}.promo>b .module-chevron{width:15px;height:15px}}
+@media(max-height:680px) and (max-width:700px){.promo>b{right:10px;bottom:9px}.promo>b .module-chevron{width:14px;height:14px}}
