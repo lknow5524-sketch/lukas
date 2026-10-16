@@ -9,7 +9,7 @@ const works = [
   { id: '04', name: '焰羽乐师', en: 'EMBER MELODY', artist: '屿藏绘画室', category: '都市幻想', price: 259, edition: 600, image: 'ember', desc: '琴弦一响，火羽就漫过夜空。她用一段旋律，把整座城市唤进热烈的梦境。' },
 ];
 const categories = ['全部', '奇境冒险', '都市幻想'];
-let saved = new Set(), selectedId = '02', category = '全部', query = '', sort = 'featured', pageIndex = 0, eventFilter = '全部';
+let saved = new Set(), selectedId = '02', category = '全部', query = '', sort = 'featured', pageIndex = 0, eventFilter = '全部', drawResultId = '', redeemCode = '', materials = [];
 try {
   const value = JSON.parse(localStorage.getItem('yu-saved') || '[]');
   if (Array.isArray(value)) saved = new Set(value.filter(id => works.some(w => w.id === id)));
@@ -18,6 +18,9 @@ const app = document.querySelector('#app');
 const money = n => new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(n);
 const escape = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const paths = {
+  draw: '<path d="M3 8h18v4H3Zm2 4v9h14v-9M12 8v13"/><path d="M12 8H8a3 3 0 1 1 3-3Zm0 0h4a3 3 0 1 0-3-3Z"/>',
+  redeem: '<path d="M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4Z"/><path d="M14 5v3m0 3v2m0 3v3"/>',
+  compose: '<path d="m12 3 10 6-10 6L2 9Zm-9 11 9 5 9-5m-18 5 9 5 9-5"/>',
   search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>',
   home: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',
   market: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
@@ -35,7 +38,7 @@ const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="fal
 const picture = (work, cls = '') => `<img class="art-image ${cls}" src="${import.meta.env.BASE_URL}art/${work.image}.webp" alt="原创赛璐璐插画：${work.name}" draggable="false">`;
 function state() {
   const path = location.hash.slice(1) || '/';
-  return { path, market: path === '/market', events: path === '/events', profile: path === '/me', collection: path === '/collection', detail: path.startsWith('/item/'), id: path.split('/')[2] };
+  return { path, zone: ['draw', 'redeem', 'compose'].includes(path.slice(1)) ? path.slice(1) : '', market: path === '/market', events: path === '/events', profile: path === '/me', collection: path === '/collection', detail: path.startsWith('/item/'), id: path.split('/')[2] };
 }
 function filtered(collection = false) {
   let list = works.filter(w => (!collection || saved.has(w.id)) && (category === '全部' || w.category === category) && (!query || `${w.name}${w.artist}`.toLowerCase().includes(query.toLowerCase())));
@@ -56,13 +59,22 @@ const saveButton = w => `<button class="save-button ${saved.has(w.id) ? 'selecte
 function card(w) {
   return `<article class="art-card"><button class="card-picture" data-open="${w.id}" aria-label="查看${w.name}">${picture(w)}<span class="card-category">${w.category}</span></button>${saveButton(w)}<div class="card-copy"><button class="card-title" data-open="${w.id}"><h2>${w.name}</h2></button><div class="card-price"><strong>${money(w.price)}</strong><span>${w.edition} 份</span></div></div></article>`;
 }
+// Central configuration for homepage channels: replace labels/routes as features grow.
+const homeChannels = [
+  { label: '抽奖', icon: 'draw', href: '/draw', color: 'lilac' },
+  { label: '兑换', icon: 'redeem', href: '/redeem', color: 'rose' },
+  { label: '合成', icon: 'compose', href: '/compose', color: 'mint' },
+];
+function channels() {
+  return `<section class="home-channels" aria-label="快捷通道">${homeChannels.map(c => { const content = `<span class="channel-icon ${c.color}">${icon(c.icon)}</span><span>${c.label}</span>`; return c.href ? `<a href="#${c.href}">${content}</a>` : `<button data-action="${c.action}">${content}</button>`; }).join('')}</section>`;
+}
 function home() {
   const w = works.find(w => w.id === selectedId) || works[0];
-  return `<main class="home-page">${heading('把故事，留在这一帧。', '本期原画 · 幻境来信', '<span class="issue">卷 / 01</span>')}<section class="home-layout"><div class="feature-picture">${picture(w)}<span class="frame-label">原画 ${w.id} / 04</span><div class="feature-pager"><button class="icon-button" data-step="-1" aria-label="上一件藏品">${icon('left')}</button><div class="pager-dots">${works.map(x => `<button data-select="${x.id}" class="${x.id === w.id ? 'active' : ''}" aria-label="查看${x.name}" aria-pressed="${x.id === w.id}"><span></span></button>`).join('')}</div><button class="icon-button" data-step="1" aria-label="下一件藏品">${icon('right')}</button></div></div><div class="feature-copy"><div class="work-kicker"><span>${w.category} / 原创系列</span>${saveButton(w)}</div><h2>${w.name}</h2><p class="work-description">${w.desc}</p><div class="author-line"><span>${w.artist}</span><span>限量 ${w.edition} 份</span></div><div class="purchase-line"><div><small>发行价格 · 人民币</small><strong>${money(w.price)}</strong></div><button class="primary" data-open="${w.id}">查看原画 ${icon('right')}</button></div><a class="text-link" href="#/market">翻阅全部藏品 ${icon('chevron')}</a></div></section>${note()}</main>`;
+  return `<main class="home-page">${heading('下一帧，心动出场。', '本期原画 · 幻境来信', '<span class="issue">精选 / 04</span>')}${channels()}<section class="home-layout"><div class="feature-picture">${picture(w)}<span class="frame-label">原画 ${w.id} / 04</span><div class="feature-pager"><button class="icon-button" data-step="-1" aria-label="上一件藏品">${icon('left')}</button><div class="pager-dots">${works.map(x => `<button data-select="${x.id}" class="${x.id === w.id ? 'active' : ''}" aria-label="查看${x.name}" aria-pressed="${x.id === w.id}"><span></span></button>`).join('')}</div><button class="icon-button" data-step="1" aria-label="下一件藏品">${icon('right')}</button></div></div><div class="feature-copy"><div class="work-kicker"><span>${w.category} / 原创系列</span>${saveButton(w)}</div><h2>${w.name}</h2><p class="work-description">${w.desc}</p><div class="author-line"><span>${w.artist}</span><span>限量 ${w.edition} 份</span></div><div class="purchase-line"><div><small>发行价格 · 人民币</small><strong>${money(w.price)}</strong></div><button class="primary" data-open="${w.id}">查看原画 ${icon('right')}</button></div><a class="text-link" href="#/market">去市场，继续发现 ${icon('chevron')}</a></div></section>${note()}</main>`;
 }
 function market(collection = false) {
   const list = filtered(collection);
-  return `<main class="market-page">${heading(collection ? '我的收藏画册' : '每一帧，都值得珍藏。', collection ? '喜欢的故事，在这里重逢' : '原画市场 · 人民币标价', `<span class="count">${list.length} 件作品</span>`)}<div class="market-toolbar"><div class="filters" role="group" aria-label="藏品分类">${categories.map(c => `<button data-category="${c}" class="${category === c ? 'active' : ''}" aria-pressed="${category === c}">${c}</button>`).join('')}</div><label class="sort-label"><span class="sr-only">藏品排序</span><select aria-label="藏品排序"><option value="featured" ${sort === 'featured' ? 'selected' : ''}>精选</option><option value="price-up" ${sort === 'price-up' ? 'selected' : ''}>价格升序</option><option value="price-down" ${sort === 'price-down' ? 'selected' : ''}>价格降序</option></select></label></div><section class="market-grid" aria-label="藏品列表">${list.length ? list.map(card).join('') : `<div class="empty"><h2>${collection ? '画册还空着' : '没有找到作品'}</h2><p>${collection ? '在作品上轻点爱心，开始你的收藏。' : '换个关键词或分类试试。'}</p><button class="primary" data-action="reset">${collection ? '去看原画' : '重置筛选'} ${icon('right')}</button></div>`}</section>${note()}</main>`;
+  return `<main class="market-page">${heading(collection ? '我的收藏画册' : '把喜欢，收进你的宇宙。', collection ? '喜欢的故事，在这里重逢' : '原画市场 · 人民币标价', `<span class="count">${list.length} 件作品</span>`)}<div class="market-toolbar"><div class="filters" role="group" aria-label="藏品分类">${categories.map(c => `<button data-category="${c}" class="${category === c ? 'active' : ''}" aria-pressed="${category === c}">${c}</button>`).join('')}</div><label class="sort-label"><span class="sr-only">藏品排序</span><select aria-label="藏品排序"><option value="featured" ${sort === 'featured' ? 'selected' : ''}>精选</option><option value="price-up" ${sort === 'price-up' ? 'selected' : ''}>价格升序</option><option value="price-down" ${sort === 'price-down' ? 'selected' : ''}>价格降序</option></select></label></div><section class="market-grid" aria-label="藏品列表">${list.length ? list.map(card).join('') : `<div class="empty"><h2>${collection ? '画册还空着' : '没有找到作品'}</h2><p>${collection ? '在作品上轻点爱心，开始你的收藏。' : '换个关键词或分类试试。'}</p><button class="primary" data-action="reset">${collection ? '去看原画' : '重置筛选'} ${icon('right')}</button></div>`}</section>${note()}</main>`;
 }
 function events() {
   const list = [
@@ -84,13 +96,29 @@ function detail(id) {
   selectedId = w.id;
   return `<main class="detail-page"><div class="detail-top"><a href="#/market" class="text-link">${icon('left')} 返回市场</a><button class="text-link" data-action="notes">收藏须知 ${icon('info')}</button></div><section class="detail-layout"><div class="detail-picture">${picture(w)}<span class="frame-label">原画 ${w.id} / 幻境来信</span></div><div class="detail-copy"><div class="work-kicker"><span>${w.category} / 原创插画</span>${saveButton(w)}</div><h1>${w.name}</h1><p class="work-description">${w.desc}</p><div class="author-line"><span>${w.artist}</span><span>限量 ${w.edition} 份</span></div><div class="purchase-line"><div><small>发行价格 · 人民币</small><strong>${money(w.price)}</strong></div><button class="primary" data-action="buy">收藏这一帧 ${icon('right')}</button></div><p class="detail-notice">演示藏品 · 不生成订单，不会扣款</p></div></section>${note()}</main>`;
 }
+function zone(type) {
+  const config = {
+    draw: { title: '下一张，惊喜登场。', label: '抽奖专区 · 免费演示', intro: '为今天，抽一张原画灵感签。' },
+    redeem: { title: '让心意，有迹可寻。', label: '兑换专区 · 体验入口', intro: '输入演示兑换码，预览一份原画心意。' },
+    compose: { title: '把灵感，重新组合。', label: '合成专区 · 效果预览', intro: '选两张示例原画，看看会遇见什么。' },
+  }[type];
+  const title = heading(config.title, config.label);
+  if (type === 'draw') {
+    const w = works.find(w => w.id === drawResultId) || works[1];
+    return `<main class="tool-page draw-page">${title}<section class="draw-stage"><span class="tool-chip">今日灵感签</span><div class="draw-art">${picture(w)}</div><div class="draw-caption"><span>${drawResultId ? '本次灵感' : '故事，等你翻开'}</span><h2>${drawResultId ? w.name : '一次小小的心动'}</h2></div></section><div class="tool-actions"><p>${config.intro}</p><button class="primary" data-action="draw-demo">${drawResultId ? '再抽一张' : '免费体验抽签'} ${icon('right')}</button></div><p class="page-note">仅随机展示原画 · 不代表获得真实藏品</p></main>`;
+  }
+  if (type === 'redeem') return `<main class="tool-page redeem-page">${title}<section class="redeem-stage"><div class="redeem-art">${picture(works[1])}<span>一份原画心意</span></div><div class="redeem-copy"><span class="tool-chip">原画体验券</span><h2>输入兑换码，<br>打开一个新故事。</h2><p>${config.intro}</p><form class="redeem-form"><label for="redeem-code">兑换码</label><input id="redeem-code" name="code" autocomplete="off" spellcheck="false" maxlength="32" placeholder="输入演示码 YU2026" value="${escape(redeemCode)}"><p class="redeem-error" role="alert"></p><button class="primary" type="submit">查看兑换预览 ${icon('right')}</button></form><button class="text-link" data-action="fill-code">填入演示码 YU2026 ${icon('chevron')}</button></div></section><p class="tool-secondary">体验码免费公开，仅用于页面演示。</p><p class="page-note">不核销真实兑换码 · 不发放真实藏品</p></main>`;
+  return `<main class="tool-page compose-page">${title}<section class="compose-stage"><div class="compose-instruction"><p>${config.intro}</p><span>${materials.length} / 2 已选</span></div><div class="material-grid">${works.map(w => `<button class="material ${materials.includes(w.id) ? 'chosen' : ''}" data-material="${w.id}" aria-pressed="${materials.includes(w.id)}" aria-label="${materials.includes(w.id) ? '取消选择' : '选择'}${w.name}">${picture(w)}<span>${w.name}</span><b>${materials.includes(w.id) ? '已选' : '选择'}</b></button>`).join('')}</div></section><div class="tool-actions"><p>两种灵感，一场新的相遇。</p><button class="primary" data-action="compose-demo" ${materials.length !== 2 ? 'disabled' : ''}>预览合成结果 ${icon('right')}</button></div><p class="page-note">示例合成 · 不消耗你已收藏的原画</p></main>`;
+}
 function render() {
   const s = state();
-  document.title = `${s.market ? '市场' : s.events ? '活动' : s.profile ? '我的' : s.collection ? '我的收藏' : s.detail ? works.find(w => w.id === s.id)?.name || '原画' : '首页'} · 屿藏`;
-  const content = s.market ? market() : s.events ? events() : s.profile ? profile() : s.collection ? market(true) : s.detail ? detail(s.id) : home();
+  document.title = `${s.zone ? ({draw:'抽奖',redeem:'兑换',compose:'合成'}[s.zone]) : s.market ? '市场' : s.events ? '活动' : s.profile ? '我的' : s.collection ? '我的收藏' : s.detail ? works.find(w => w.id === s.id)?.name || '原画' : '首页'} · 屿藏`;
+  const content = s.zone ? zone(s.zone) : s.market ? market() : s.events ? events() : s.profile ? profile() : s.collection ? market(true) : s.detail ? detail(s.id) : home();
   app.innerHTML = header() + content + nav();
   const select = app.querySelector('select');
   if (select) select.onchange = e => { sort = e.target.value; render(); };
+  const redeemForm = app.querySelector('.redeem-form');
+  if (redeemForm) { const input = redeemForm.querySelector('input'); input.oninput = () => { redeemCode = input.value; app.querySelector('.redeem-error').textContent = ''; }; redeemForm.onsubmit = e => { e.preventDefault(); redeemCode = input.value; if (redeemCode.trim().toUpperCase() !== 'YU2026') { app.querySelector('.redeem-error').textContent = '演示码不匹配，请使用 YU2026。'; input.focus(); return; } modal('<p class="eyebrow">兑换预览</p><h2>镜夜行者 · 原画心意</h2><div class="result-art">' + picture(works[1]) + '</div><p>这是演示兑换结果，不会核销真实兑换码或发放藏品。你可以继续查看原画。</p><button class="primary" data-open="02">查看原画 '+icon('right')+'</button>'); }; }
 }
 function toast(message) {
   document.querySelector('.toast')?.remove();
@@ -138,6 +166,7 @@ function buy() {
 function go(path) { document.querySelector('dialog')?.close(); if (location.hash === `#${path}`) render(); else location.hash = path; }
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.material) { const id = b.dataset.material; if (materials.includes(id)) materials = materials.filter(x => x !== id); else if (materials.length < 2) materials.push(id); else { toast('最多选择两张示例原画'); return; } render(); }
   if (b.dataset.open) go(`/item/${b.dataset.open}`);
   if (b.dataset.save) { const id = b.dataset.save; saved.has(id) ? saved.delete(id) : saved.add(id); persist(); render(); }
   if (b.dataset.step) { selectedId = works[(works.findIndex(w => w.id === selectedId) + Number(b.dataset.step) + works.length) % works.length].id; render(); }
@@ -151,6 +180,9 @@ document.addEventListener('click', e => {
   }
   const action = b.dataset.action;
   if (action === 'search') searchDialog();
+  if (action === 'fill-code') { redeemCode = 'YU2026'; const input = app.querySelector('#redeem-code'); input.value = redeemCode; app.querySelector('.redeem-error').textContent = ''; input.focus(); }
+  if (action === 'draw-demo') { drawResultId = works[Math.floor(Math.random() * works.length)].id; render(); toast('原画灵感签已翻开，仅作免费演示'); }
+  if (action === 'compose-demo' && materials.length === 2) { const result = works.find(w => !materials.includes(w.id)) || works[3]; modal('<p class="eyebrow">合成效果预览</p><h2>新的灵感 · ' + result.name + '</h2><div class="result-art">' + picture(result) + '</div><p>这是示例合成结果，没有消耗原画，也没有生成真实的新藏品。</p><button class="primary" data-open="' + result.id + '">查看示例原画 '+icon('right')+'</button>'); }
   if (action === 'edit-profile') editProfile();
   if (action === 'buy') buy();
   if (action === 'favorites') go('/collection');
@@ -169,5 +201,5 @@ app.addEventListener('touchend', e => {
   if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) app.querySelector(`[data-step="${dx < 0 ? 1 : -1}"]`)?.click();
 }, { passive: true });
 document.addEventListener('keydown', e => { if (document.querySelector('dialog') || e.target.matches('input,select,textarea')) return; if (e.key === 'ArrowRight') app.querySelector('[data-step="1"]')?.click(); if (e.key === 'ArrowLeft') app.querySelector('[data-step="-1"]')?.click(); });
-window.addEventListener('hashchange', () => { category = '全部'; query = ''; pageIndex = 0; render(); });
+window.addEventListener('hashchange', () => { document.querySelector('.toast')?.remove(); category = '全部'; query = ''; pageIndex = 0; render(); });
 render();
