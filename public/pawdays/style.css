@@ -16,3 +16,39 @@
 .film-portal img{transform:translateX(21vw) scale(1.08)}@media(max-width:800px){.film-portal img{object-position:20% center;transform:scale(1.08)}}
 .film-portal img{position:absolute;left:36%;top:14%;width:28%;height:74%;object-position:30% 20%;transform:none;will-change:auto}@media(max-width:800px){.film-portal img{left:19%;top:29%;width:62%;height:56%;object-position:30% 20%;transform:none}}
 .film-portal img{object-position:10% 20%}
+/* Phone composition: separate text, portrait and controls into non-overlapping bands. */
+@media(max-width:800px){
+ .page-community main>header{height:76px}
+ .film-stage{--frame-top:clamp(270px,36svh,340px);--frame-bottom:calc(144px + env(safe-area-inset-bottom));height:100svh;min-height:0}
+ .film-heading{top:clamp(88px,12svh,104px);padding:0 24px;font-size:clamp(34px,11vw,44px);line-height:1.05;text-align:center;letter-spacing:-.04em}
+ .film-heading span:last-child{text-align:center;padding:0;margin-top:8px}
+ .film-intro{top:clamp(188px,26svh,224px);bottom:auto;left:24px;right:24px;max-width:none;text-align:center}
+ .film-intro h1{font-size:16px;line-height:1.6;font-weight:450;margin:0}
+ .film-rim{top:var(--frame-top);left:22%;width:56%;height:calc(100% - var(--frame-top) - var(--frame-bottom));border-width:8px}
+ .film-portal{clip-path:inset(var(--frame-top) 22% var(--frame-bottom) 22% round 260px)}
+ .film-portal img{top:var(--frame-top);left:22%;width:56%;height:calc(100% - var(--frame-top) - var(--frame-bottom));object-position:10% 20%}
+ .film-scroll{left:24px;right:24px;bottom:calc(92px + env(safe-area-inset-bottom));max-width:none;font-size:12px;min-height:36px;padding:8px 0;text-align:center;white-space:nowrap}
+ .film-floating{display:none}
+ .film-message{left:24px;right:24px;bottom:calc(116px + env(safe-area-inset-bottom));max-width:none}
+ .film-message h2{font-size:clamp(30px,9vw,40px);line-height:1.4}
+ .film-section-head h2,.film-guide-heading h2{font-size:clamp(30px,9.2vw,42px);font-stretch:100%;letter-spacing:-.04em;overflow-wrap:normal}
+ .film-section-head h2>span,.film-guide-heading h2>span{font-size:clamp(18px,5vw,20px);letter-spacing:0}
+ .film-tools h2{font-size:clamp(28px,8vw,34px);font-stretch:100%;overflow-wrap:normal}
+ .film-tools h2>span{font-size:22px;letter-spacing:0}
+ .film-community .post h3,.film-tool-links>button,.film-accordion>button{overflow-wrap:anywhere}
+ .film-guide-image{height:auto;aspect-ratio:1;object-position:30% center}
+ .film-world{min-height:0;padding:56px 24px calc(112px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:stretch;gap:0}
+ .film-world-word{font-size:clamp(36px,13vw,76px);font-stretch:100%;letter-spacing:-.04em;line-height:1.15;text-align:center;margin:0;max-width:100%;transform:none}
+ .film-orbit{position:relative;top:auto;right:auto;width:min(78vw,360px);height:auto;aspect-ratio:1;margin:48px auto 40px;flex-shrink:0}
+ .film-world-copy{margin:0;max-width:none}
+ .film-world-copy h2{font-size:clamp(24px,7vw,32px);line-height:1.6;letter-spacing:0}
+ .film-endnote{margin-top:48px;padding-top:24px}
+ .film-endnote>span{margin-bottom:16px}
+ .film-manifesto,.film-community,.film-guide,.film-tools{padding-left:max(24px,env(safe-area-inset-left));padding-right:max(24px,env(safe-area-inset-right))}
+ dialog{padding-left:24px;padding-right:24px;max-width:calc(100% - 24px)}
+}
+@media(max-width:800px) and (max-height:620px){.film-stage{--frame-top:250px;--frame-bottom:128px}.film-heading{top:84px;font-size:32px}.film-intro{top:174px}.film-intro h1{font-size:15px}.film-scroll{bottom:calc(80px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce) and (max-width:800px){.film-story{height:100svh;min-height:0}}
+@media(max-width:800px){.film-world-word{color:#a89c8b}}
+@media(max-width:800px){.film-stage{--phone-heading-top:clamp(88px,12svh,104px);--phone-heading-size:clamp(34px,11vw,44px);--frame-top:clamp(278px,36svh,340px)}.film-heading{top:var(--phone-heading-top);font-size:var(--phone-heading-size)}.film-intro{top:calc(var(--phone-heading-top) + var(--phone-heading-size) + var(--phone-heading-size) + 36px)}}
+@media(max-width:800px) and (max-height:620px){.film-stage{--phone-heading-top:84px;--phone-heading-size:32px;--frame-top:250px;--frame-bottom:128px}}
